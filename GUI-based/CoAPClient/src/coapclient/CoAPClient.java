@@ -5,21 +5,29 @@
  */
 package coapclient;
 
+import coapclient.entities.Option;
 import coapclient.enums.MessageType;
 import coapclient.enums.Version;
 import coapclient.util.CommandUtil;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -28,9 +36,12 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -54,6 +65,9 @@ public class CoAPClient extends Application {
     private TextField destIPTextField;
     private TextField destPortTextField;
     private String sendMsgCommand = "echo '%s' | xxd -r -p | nc -u -w1 %s %s";
+    
+    private TableView<Option> optionsTable = new TableView<>();
+    private ObservableList<Option> options = FXCollections.observableArrayList();
 
     @Override
 
@@ -135,6 +149,29 @@ public class CoAPClient extends Application {
         header2HBox.setAlignment(Pos.CENTER_LEFT);
         
         HBox tokenSepHBox = createNameSeparator("Token");
+        
+        Label tokenLabel = new Label("Token:");
+        TextField tokenTextField = new TextField();
+        HBox tokenHBox = new HBox(tokenLabel, tokenTextField);
+        tokenHBox.setStyle("-fx-spacing: 5");
+        tokenHBox.setAlignment(Pos.CENTER_LEFT);
+        
+        HBox optionsSepHBox = createNameSeparator("Option(s)");
+        
+        TableColumn deltaCol = new TableColumn("Delta");
+        deltaCol.setCellValueFactory(new PropertyValueFactory("delta"));
+        TableColumn lengthCol = new TableColumn("Length");
+        lengthCol.setCellValueFactory(new PropertyValueFactory("length"));
+        TableColumn deltaExtendedCol = new TableColumn("Delta Extended");
+        deltaExtendedCol.setCellValueFactory(new PropertyValueFactory("deltaExtended"));
+        TableColumn lengthExtendedCol = new TableColumn("Length Extended");
+        lengthExtendedCol.setCellValueFactory(new PropertyValueFactory("lengthExtended"));
+        TableColumn valueCol = new TableColumn("Value");
+        valueCol.setCellValueFactory(new PropertyValueFactory("value"));
+        optionsTable.getColumns().addAll(deltaCol, lengthCol, deltaExtendedCol, lengthExtendedCol, valueCol);
+        optionsTable.setItems(options);
+        
+        Separator separator1 = new Separator();
 
         Label label1 = new Label("CoAP Message (Binary):");
         Button btnHelp = new Button();
@@ -213,8 +250,20 @@ public class CoAPClient extends Application {
         buttonHBox.setStyle("-fx-spacing: 5");
         buttonHBox.setAlignment(Pos.CENTER_LEFT);
 
-        Separator separator1 = new Separator();
+        
 
+        
+
+        VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox, 
+                tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, separator1, helpHBox, textAreaHBox, buttonHBox);
+        reqVBox.setSpacing(10);
+        reqVBox.setPadding(new Insets(20, 20, 20, 20));
+        
+        Separator sepVert = new Separator();
+        sepVert.setOrientation(Orientation.VERTICAL);
+        sepVert.setValignment(VPos.CENTER);
+        
+        
         Label label2 = new Label("Received Packet's Content:");
 
         rcvLabel = new Label("Nothing Yet!");
@@ -222,15 +271,17 @@ public class CoAPClient extends Application {
         HBox rcvLabelHBox = new HBox(rcvLabel);
         rcvLabelHBox.setStyle("-fx-spacing: 5");
         rcvLabelHBox.setAlignment(Pos.CENTER_LEFT);
-
-        VBox vBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox, tokenSepHBox, helpHBox, textAreaHBox, buttonHBox, separator1, label2, rcvLabelHBox);
-        vBox.setSpacing(10);
-        vBox.setPadding(new Insets(20, 20, 20, 20));
+        
+        VBox resVBox = new VBox(label2, rcvLabelHBox);
+        resVBox.setSpacing(10);
+        resVBox.setPadding(new Insets(20, 20, 20, 20));
+        
+        HBox hbox = new HBox(reqVBox, sepVert, resVBox);
 
         StackPane root = new StackPane();
-        root.getChildren().add(vBox);
+        root.getChildren().add(hbox);
 
-        Scene scene = new Scene(root, 600, 500);
+        Scene scene = new Scene(root, 960, 640);
 
         primaryStage.setTitle("CoAP Client");
         primaryStage.setScene(scene);
