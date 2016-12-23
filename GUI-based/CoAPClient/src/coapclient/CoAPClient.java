@@ -5,14 +5,13 @@
  */
 package coapclient;
 
+import coapclient.dialogs.NewOptionDialog;
 import coapclient.entities.Option;
 import coapclient.enums.MessageType;
-import coapclient.enums.Version;
 import coapclient.util.CommandUtil;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
@@ -27,10 +26,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -65,7 +64,7 @@ public class CoAPClient extends Application {
     private TextField destIPTextField;
     private TextField destPortTextField;
     private String sendMsgCommand = "echo '%s' | xxd -r -p | nc -u -w1 %s %s";
-    
+
     private TableView<Option> optionsTable = new TableView<>();
     private ObservableList<Option> options = FXCollections.observableArrayList();
 
@@ -89,14 +88,17 @@ public class CoAPClient extends Application {
         };
         TextFormatter<Integer> numberFormatter0 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
-        
+
         TextFormatter<Integer> numberFormatter1 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
-        
+
         TextFormatter<Integer> numberFormatter2 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
-        
+
         TextFormatter<Integer> numberFormatter3 = new TextFormatter<Integer>(
+                new IntegerStringConverter(), 0, filter);
+        
+        TextFormatter<Integer> numberFormatter4 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
 
         HBox destSepHBox = createNameSeparator("Destination");
@@ -114,8 +116,10 @@ public class CoAPClient extends Application {
         HBox headerSepHBox = createNameSeparator("Header");
 
         Label verLabel = new Label("Version:");
-        ComboBox<Version> cbxVersion = new ComboBox<>();
-        cbxVersion.getItems().setAll(Version.values());
+        Spinner<Integer> versionSpinner = new Spinner<>(0, 3, 1);
+        versionSpinner.setEditable(true);
+        versionSpinner.setMaxWidth(60);
+        versionSpinner.getEditor().setTextFormatter(numberFormatter4);
         Label msgTypeLabel = new Label("Msg. Type:");
         ComboBox<MessageType> cbxMsgType = new ComboBox<>();
         cbxMsgType.getItems().setAll(MessageType.values());
@@ -126,7 +130,7 @@ public class CoAPClient extends Application {
         tklSpinner.getEditor().setTextFormatter(numberFormatter0);
         tklSpinner.setMaxWidth(70);
 
-        HBox header1HBox = new HBox(verLabel, cbxVersion, msgTypeLabel, cbxMsgType, tklLabel, tklSpinner);
+        HBox header1HBox = new HBox(verLabel, versionSpinner, msgTypeLabel, cbxMsgType, tklLabel, tklSpinner);
         header1HBox.setStyle("-fx-spacing: 5");
         header1HBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -147,17 +151,17 @@ public class CoAPClient extends Application {
         HBox header2HBox = new HBox(codeLabel, codeClassSpinner, codeDetailSpinner, msgID, msgIDSpinner);
         header2HBox.setStyle("-fx-spacing: 5");
         header2HBox.setAlignment(Pos.CENTER_LEFT);
-        
+
         HBox tokenSepHBox = createNameSeparator("Token");
-        
+
         Label tokenLabel = new Label("Token:");
         TextField tokenTextField = new TextField();
         HBox tokenHBox = new HBox(tokenLabel, tokenTextField);
         tokenHBox.setStyle("-fx-spacing: 5");
         tokenHBox.setAlignment(Pos.CENTER_LEFT);
-        
+
         HBox optionsSepHBox = createNameSeparator("Option(s)");
-        
+
         TableColumn deltaCol = new TableColumn("Delta");
         deltaCol.setCellValueFactory(new PropertyValueFactory("delta"));
         TableColumn lengthCol = new TableColumn("Length");
@@ -170,37 +174,33 @@ public class CoAPClient extends Application {
         valueCol.setCellValueFactory(new PropertyValueFactory("value"));
         optionsTable.getColumns().addAll(deltaCol, lengthCol, deltaExtendedCol, lengthExtendedCol, valueCol);
         optionsTable.setItems(options);
-        
-        Separator separator1 = new Separator();
 
-        Label label1 = new Label("CoAP Message (Binary):");
-        Button btnHelp = new Button();
-        btnHelp.setText(" ? ");
-        btnHelp.setOnAction(new EventHandler<ActionEvent>() {
-
+        Button btnAdd = new Button();
+        btnAdd.setText("+");
+        btnAdd.setOnAction(
+                new EventHandler<ActionEvent>() {
             @Override
-            public void handle(ActionEvent event) {
-                Dialog helpDialog = new Dialog();
-                helpDialog.initModality(Modality.NONE);
-                helpDialog.setContentText("| Ver(2) | Type(2) | TKL(4) | Code(8) | MsgID(16) |\n"
-                        + "| Token (if any)... \n| Options[Op. relative no(4)|Op. length(4)|Op. value]\n| 11111111 [optional] | Payload (if any)");
-                helpDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
-                helpDialog.show();
+            public void handle(final ActionEvent e) {
+                newOption();
             }
         });
-        Pane helpPane = new Pane();
-        HBox helpHBox = new HBox(label1, helpPane, btnHelp);
-        helpHBox.setStyle("-fx-spacing: 5");
-        helpHBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(helpPane, Priority.ALWAYS);
 
-        binaryTextArea = new TextArea();
-        binaryTextArea.setWrapText(true);
-        binaryTextArea.setFont(new Font("Courier New", 15));
-        HBox textAreaHBox = new HBox(binaryTextArea);
-        textAreaHBox.setStyle("-fx-spacing: 5");
-        textAreaHBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(binaryTextArea, Priority.ALWAYS);
+        Button btnRemove = new Button();
+        btnRemove.setText("-");
+        btnRemove.setOnAction(
+                new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(final ActionEvent e) {
+                deleteOption();
+            }
+        });
+
+        HBox optionsBtnHBox = new HBox(btnAdd, btnRemove);
+        optionsBtnHBox.setStyle("-fx-spacing: 5");
+        optionsBtnHBox.setAlignment(Pos.CENTER_LEFT);
+
+        Separator separator1 = new Separator();
+
         Button btnSend = new Button();
         btnSend.setText("Send");
         btnSend.setOnAction(new EventHandler<ActionEvent>() {
@@ -245,25 +245,76 @@ public class CoAPClient extends Application {
                 binaryTextArea.setText("");
             }
         });
+        
+        Button btnBinary = new Button();
+        btnBinary.setText("01");
+        btnBinary.setOnAction(new EventHandler<ActionEvent>() {
 
-        HBox buttonHBox = new HBox(btnSend, btnClear);
+            @Override
+            public void handle(ActionEvent event) {
+                Dialog binaryDialog = new Dialog();
+                binaryDialog.initModality(Modality.NONE);
+                Label label1 = new Label("CoAP Message (Binary):");
+                binaryTextArea = new TextArea();
+                binaryTextArea.setWrapText(true);
+                binaryTextArea.setFont(new Font("Courier New", 15));
+                HBox textAreaHBox = new HBox(binaryTextArea);
+                textAreaHBox.setStyle("-fx-spacing: 5");
+                textAreaHBox.setAlignment(Pos.CENTER_LEFT);
+                HBox.setHgrow(binaryTextArea, Priority.ALWAYS);
+                VBox vbox = new VBox(label1, textAreaHBox);
+                binaryDialog.getDialogPane().getChildren().add(vbox);
+                binaryDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
+                binaryDialog.show();
+            }
+        });
+        Button btnHelp = new Button();
+        btnHelp.setText(" ? ");
+        btnHelp.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                Dialog helpDialog = new Dialog();
+                helpDialog.initModality(Modality.NONE);
+                helpDialog.setContentText("| Ver(2) | Type(2) | TKL(4) | Code(8) | MsgID(16) |\n"
+                        + "| Token (if any)... \n| Options[Op. relative no(4)|Op. length(4)|Op. value]\n| 11111111 [optional] | Payload (if any)");
+                helpDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
+                helpDialog.show();
+            }
+        });
+        Pane buttonPane = new Pane();
+
+        HBox buttonHBox = new HBox(btnSend, btnClear, buttonPane, btnBinary, btnHelp);
         buttonHBox.setStyle("-fx-spacing: 5");
         buttonHBox.setAlignment(Pos.CENTER_LEFT);
-
+        HBox.setHgrow(buttonPane, Priority.ALWAYS);
+        
+        HBox payloadHBox = createNameSeparator("Payload");
+        CheckBox enablePayload = new CheckBox("Including payload");
+        CheckBox defaultPayloadMarker = new CheckBox("Default Payload Marker");
+        TextField payloadMarkerTextField = new TextField();
+        HBox pmHBox = new HBox(defaultPayloadMarker, payloadMarkerTextField);
+        pmHBox.setStyle("-fx-spacing: 5");
+        pmHBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(payloadMarkerTextField, Priority.ALWAYS);
+        
+        Label pLabel = new Label("Payload:");
+        TextArea payloadTextArea = new TextArea();
+        payloadTextArea.setMaxWidth(460);
+       
+        
         
 
-        
-
-        VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox, 
-                tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, separator1, helpHBox, textAreaHBox, buttonHBox);
+        VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox,
+                tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, optionsBtnHBox, payloadHBox, 
+                enablePayload, pmHBox, pLabel, payloadTextArea, separator1, buttonHBox);
         reqVBox.setSpacing(10);
         reqVBox.setPadding(new Insets(20, 20, 20, 20));
-        
+
         Separator sepVert = new Separator();
         sepVert.setOrientation(Orientation.VERTICAL);
         sepVert.setValignment(VPos.CENTER);
-        
-        
+
         Label label2 = new Label("Received Packet's Content:");
 
         rcvLabel = new Label("Nothing Yet!");
@@ -271,11 +322,11 @@ public class CoAPClient extends Application {
         HBox rcvLabelHBox = new HBox(rcvLabel);
         rcvLabelHBox.setStyle("-fx-spacing: 5");
         rcvLabelHBox.setAlignment(Pos.CENTER_LEFT);
-        
+
         VBox resVBox = new VBox(label2, rcvLabelHBox);
         resVBox.setSpacing(10);
         resVBox.setPadding(new Insets(20, 20, 20, 20));
-        
+
         HBox hbox = new HBox(reqVBox, sepVert, resVBox);
 
         StackPane root = new StackPane();
@@ -312,6 +363,19 @@ public class CoAPClient extends Application {
         hBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(separator, Priority.ALWAYS);
         return hBox;
+    }
+
+    private void newOption() {
+        NewOptionDialog pd = new NewOptionDialog();
+        Optional<Option> result = pd.showAndWait();
+        result.ifPresent(option -> options.add(option));
+    }
+
+    private void deleteOption() {
+        Option selectedOption = optionsTable.getSelectionModel().getSelectedItem();
+        if (selectedOption != null) {
+            options.remove(selectedOption);
+        }
     }
 
     /**
