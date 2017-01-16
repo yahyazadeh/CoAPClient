@@ -6,9 +6,11 @@
 package coapclient;
 
 import coapclient.dialogs.NewOptionDialog;
+import coapclient.entities.CoapMessage;
 import coapclient.entities.Option;
 import coapclient.enums.MessageType;
 import coapclient.util.CommandUtil;
+import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Optional;
@@ -67,6 +69,10 @@ public class CoAPClient extends Application {
 
     private TableView<Option> optionsTable = new TableView<>();
     private ObservableList<Option> options = FXCollections.observableArrayList();
+    private CheckBox enablePayload;
+    private CheckBox defaultPayloadMarker;
+    private TextField payloadMarkerTextField;
+    private TextArea payloadTextArea;
 
     @Override
 
@@ -97,7 +103,7 @@ public class CoAPClient extends Application {
 
         TextFormatter<Integer> numberFormatter3 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
-        
+
         TextFormatter<Integer> numberFormatter4 = new TextFormatter<Integer>(
                 new IntegerStringConverter(), 0, filter);
 
@@ -207,6 +213,9 @@ public class CoAPClient extends Application {
 
             @Override
             public void handle(ActionEvent event) {
+                CoapMessage coapMessage = new CoapMessage();
+                coapMessage.setToken(BigInteger.TEN);
+                coapMessage.toBitString();
                 if (!binaryTextArea.getText().equals("") && !destIPTextField.getText().equals("")) {
                     String hexStr = convertBinaryToHex(binaryTextArea.getText().replaceAll("\\s", ""));
                     String command = String.format(sendMsgCommand, hexStr, destIPTextField.getText(), destPortTextField.getText());
@@ -233,6 +242,7 @@ public class CoAPClient extends Application {
                         }
                     });
                     new Thread(task).start();
+
                 }
             }
         });
@@ -245,7 +255,7 @@ public class CoAPClient extends Application {
                 binaryTextArea.setText("");
             }
         });
-        
+
         Button btnBinary = new Button();
         btnBinary.setText("01");
         btnBinary.setOnAction(new EventHandler<ActionEvent>() {
@@ -288,25 +298,30 @@ public class CoAPClient extends Application {
         buttonHBox.setStyle("-fx-spacing: 5");
         buttonHBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(buttonPane, Priority.ALWAYS);
-        
+
         HBox payloadHBox = createNameSeparator("Payload");
-        CheckBox enablePayload = new CheckBox("Including payload");
-        CheckBox defaultPayloadMarker = new CheckBox("Default Payload Marker");
-        TextField payloadMarkerTextField = new TextField();
+        enablePayload = new CheckBox("Including payload");
+        enablePayload.setSelected(false);
+        enablePayload.setOnAction(e -> handleEnablePayloadAction(e));
+        defaultPayloadMarker = new CheckBox("Default Payload Marker");
+        defaultPayloadMarker.setSelected(true);
+        defaultPayloadMarker.setDisable(true);
+        defaultPayloadMarker.setOnAction(e -> handleDefaultPayloadMarkerAction(e));
+        payloadMarkerTextField = new TextField();
+        payloadMarkerTextField.setText("11111111");
+        payloadMarkerTextField.setDisable(true);
         HBox pmHBox = new HBox(defaultPayloadMarker, payloadMarkerTextField);
         pmHBox.setStyle("-fx-spacing: 5");
         pmHBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(payloadMarkerTextField, Priority.ALWAYS);
-        
+
         Label pLabel = new Label("Payload:");
-        TextArea payloadTextArea = new TextArea();
+        payloadTextArea = new TextArea();
         payloadTextArea.setMaxWidth(460);
-       
-        
-        
+        payloadTextArea.setDisable(true);
 
         VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox,
-                tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, optionsBtnHBox, payloadHBox, 
+                tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, optionsBtnHBox, payloadHBox,
                 enablePayload, pmHBox, pLabel, payloadTextArea, separator1, buttonHBox);
         reqVBox.setSpacing(10);
         reqVBox.setPadding(new Insets(20, 20, 20, 20));
@@ -375,6 +390,32 @@ public class CoAPClient extends Application {
         Option selectedOption = optionsTable.getSelectionModel().getSelectedItem();
         if (selectedOption != null) {
             options.remove(selectedOption);
+        }
+    }
+
+    private void handleDefaultPayloadMarkerAction(ActionEvent e) {
+        if (defaultPayloadMarker.isSelected()) {
+            payloadMarkerTextField.setText("11111111");
+            payloadMarkerTextField.setDisable(true);
+        } else {
+            payloadMarkerTextField.setDisable(false);
+        }
+    }
+
+    private void handleEnablePayloadAction(ActionEvent e) {
+        if (enablePayload.isSelected()) {
+            defaultPayloadMarker.setDisable(false);
+            payloadTextArea.setDisable(false);
+            if (defaultPayloadMarker.isSelected()) {
+                payloadMarkerTextField.setText("11111111");
+                payloadMarkerTextField.setDisable(true);
+            } else {
+                payloadMarkerTextField.setDisable(false);
+            }
+        } else {
+            defaultPayloadMarker.setDisable(true);
+            payloadMarkerTextField.setDisable(true);
+            payloadTextArea.setDisable(true);
         }
     }
 

@@ -10,41 +10,41 @@ package coapclient.entities;
  * @author daniel
  */
 public class Option {
-    private String delta;
-    private String length;
-    private String deltaExtended;
-    private String lengthExtended;
+    private int delta;
+    private int length;
+    private int deltaExtended;
+    private int lengthExtended;
     private String value;
 
-    public String getDelta() {
+    public int getDelta() {
         return delta;
     }
 
-    public void setDelta(String delta) {
+    public void setDelta(int delta) {
         this.delta = delta;
     }
 
-    public String getLength() {
+    public int getLength() {
         return length;
     }
 
-    public void setLength(String length) {
+    public void setLength(int length) {
         this.length = length;
     }
 
-    public String getDeltaExtended() {
+    public int getDeltaExtended() {
         return deltaExtended;
     }
 
-    public void setDeltaExtended(String deltaExtended) {
+    public void setDeltaExtended(int deltaExtended) {
         this.deltaExtended = deltaExtended;
     }
 
-    public String getLengthExtended() {
+    public int getLengthExtended() {
         return lengthExtended;
     }
 
-    public void setLengthExtended(String lengthExtended) {
+    public void setLengthExtended(int lengthExtended) {
         this.lengthExtended = lengthExtended;
     }
 
