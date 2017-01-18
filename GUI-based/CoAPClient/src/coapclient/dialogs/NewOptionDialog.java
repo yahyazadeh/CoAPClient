@@ -127,10 +127,10 @@ public class NewOptionDialog extends Dialog<Option> {
 
         setResultConverter(dialogButton -> {
             if (dialogButton == addOptionButtonType) {
-//                option.setDelta(deltaSpinner.getEditor().getText());
-//                option.setLength(lengthSpinner.getEditor().getText());
-//                option.setDeltaExtended(deltaExtSpinner.getEditor().getText());
-//                option.setLengthExtended(lengthExtSpinner.getEditor().getText());
+                option.setDelta(deltaSpinner.getValue());
+                option.setLength(lengthSpinner.getValue());
+                option.setDeltaExtended(deltaExtSpinner.getValue());
+                option.setLengthExtended(lengthExtSpinner.getValue());
                 option.setValue(valueTextArea.getText());
                 return option;
             }

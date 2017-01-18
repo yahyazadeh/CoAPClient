@@ -214,10 +214,19 @@ public class CoAPClient extends Application {
             @Override
             public void handle(ActionEvent event) {
                 CoapMessage coapMessage = new CoapMessage();
-                coapMessage.setToken(BigInteger.TEN);
-                coapMessage.toBitString();
-                if (!binaryTextArea.getText().equals("") && !destIPTextField.getText().equals("")) {
-                    String hexStr = convertBinaryToHex(binaryTextArea.getText().replaceAll("\\s", ""));
+                coapMessage.setVersion(versionSpinner.getValue());
+                coapMessage.setMsgType(cbxMsgType.getSelectionModel().getSelectedItem().ordinal());
+                coapMessage.setTklLength(tklSpinner.getValue());
+                coapMessage.setCodeClass(codeClassSpinner.getValue());
+                coapMessage.setCodeDetail(codeDetailSpinner.getValue());
+                coapMessage.setMsgID(msgIDSpinner.getValue());
+                coapMessage.setToken(new BigInteger(tokenTextField.getText()));
+                coapMessage.setOptions(options);
+                coapMessage.setPayloadMarker(payloadMarkerTextField.getText());
+                coapMessage.setPayload(payloadTextArea.getText());
+                String binaryString = coapMessage.toBitString();
+                if (!binaryString.equals("") && !destIPTextField.getText().equals("") && !destPortTextField.getText().equals("")) {
+                    String hexStr = convertBinaryToHex(binaryString.replaceAll("\\s", ""));
                     String command = String.format(sendMsgCommand, hexStr, destIPTextField.getText(), destPortTextField.getText());
 
                     Task<String> task = new Task<String>() {
