@@ -81,7 +81,7 @@ public class NewOptionDialog extends Dialog<Option> {
         Label label0 = new Label("Delta:");
         optionGrid.add(label0, 0, 0, 1, 1);
 
-        deltaSpinner = new Spinner<>(0, 15, 1);
+        deltaSpinner = new Spinner<>(0, 15, 0);
         deltaSpinner.setMaxWidth(70);
         deltaSpinner.setEditable(true);
         deltaSpinner.getEditor().setTextFormatter(numberFormatter0);
@@ -91,7 +91,7 @@ public class NewOptionDialog extends Dialog<Option> {
         label1.setMinWidth(60);
         optionGrid.add(label1, 2, 0, 1, 1);
         
-        lengthSpinner = new Spinner<>(0, 15, 1);
+        lengthSpinner = new Spinner<>(0, 15, 0);
         lengthSpinner.setMaxWidth(70);
         lengthSpinner.setEditable(true);
         lengthSpinner.getEditor().setTextFormatter(numberFormatter1);
@@ -100,7 +100,7 @@ public class NewOptionDialog extends Dialog<Option> {
         Label label2 = new Label("Delta Ext.:");
         optionGrid.add(label2, 0, 1, 1, 1);
 
-        deltaExtSpinner = new Spinner<>(0, 65535, 1);
+        deltaExtSpinner = new Spinner<>(0, 65535, 0);
         deltaExtSpinner.setMaxWidth(220);
         deltaExtSpinner.setEditable(true);
         deltaExtSpinner.getEditor().setTextFormatter(numberFormatter2);
@@ -109,7 +109,7 @@ public class NewOptionDialog extends Dialog<Option> {
         Label label3 = new Label("Length Ext.:");
         optionGrid.add(label3, 0, 2, 1, 1);
 
-        lengthExtSpinner = new Spinner<>(0, 65535, 1);
+        lengthExtSpinner = new Spinner<>(0, 65535, 0);
         lengthExtSpinner.setMaxWidth(220);
         lengthExtSpinner.setEditable(true);
         lengthExtSpinner.getEditor().setTextFormatter(numberFormatter3);

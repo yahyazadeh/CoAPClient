@@ -10,10 +10,12 @@ import coapclient.entities.CoapMessage;
 import coapclient.entities.Option;
 import coapclient.enums.MessageType;
 import coapclient.util.CommandUtil;
+import coapclient.util.StringUtil;
 import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
@@ -29,6 +31,8 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
@@ -36,12 +40,14 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -67,12 +73,28 @@ public class CoAPClient extends Application {
     private TextField destPortTextField;
     private String sendMsgCommand = "echo '%s' | xxd -r -p | nc -u -w1 %s %s";
 
+    private Spinner<Integer> versionSpinner;
+    private CheckBox versionRandom;
+    private ComboBox<MessageType> cbxMsgType;
+    private CheckBox msgTypeRandom;
+    private Spinner<Integer> tklSpinner;
+    private CheckBox tklRandom;
+    private Spinner<Integer> codeClassSpinner;
+    private Spinner<Integer> codeDetailSpinner;
+    private CheckBox codeRandom;
+    private Spinner<Integer> msgIDSpinner;
+    private CheckBox msgIDRandom;
+    private TextField tokenTextField;
+    private CheckBox tokenRandom;
     private TableView<Option> optionsTable = new TableView<>();
     private ObservableList<Option> options = FXCollections.observableArrayList();
+    private CheckBox optionRandom;
     private CheckBox enablePayload;
     private CheckBox defaultPayloadMarker;
+    private CheckBox payloadMarkerRandom;
     private TextField payloadMarkerTextField;
     private TextArea payloadTextArea;
+    private CheckBox payloadRandom;
 
     @Override
 
@@ -122,49 +144,82 @@ public class CoAPClient extends Application {
         HBox headerSepHBox = createNameSeparator("Header");
 
         Label verLabel = new Label("Version:");
-        Spinner<Integer> versionSpinner = new Spinner<>(0, 3, 1);
+        versionSpinner = new Spinner<>(0, 3, 0);
         versionSpinner.setEditable(true);
         versionSpinner.setMaxWidth(60);
         versionSpinner.getEditor().setTextFormatter(numberFormatter4);
-        Label msgTypeLabel = new Label("Msg. Type:");
-        ComboBox<MessageType> cbxMsgType = new ComboBox<>();
+        versionRandom = new CheckBox("R?");
+        versionRandom.setTooltip(new Tooltip("Random selection"));
+        versionRandom.setSelected(false);
+        versionRandom.setOnAction(e -> handleVersionRandomAction(e));
+        Label msgTypeLabel = new Label("  Msg. Type:");
+        cbxMsgType = new ComboBox<>();
         cbxMsgType.getItems().setAll(MessageType.values());
-        cbxMsgType.setMaxWidth(70);
+        cbxMsgType.getSelectionModel().selectFirst();
+        cbxMsgType.setMaxWidth(100);
+        msgTypeRandom = new CheckBox("R?");
+        msgTypeRandom.setTooltip(new Tooltip("Random selection"));
+        msgTypeRandom.setSelected(false);
+        msgTypeRandom.setOnAction(e -> handleMsgTypeRandomAction(e));
+        
+        HBox header0HBox = new HBox(verLabel, versionSpinner, versionRandom, msgTypeLabel, cbxMsgType, msgTypeRandom); //, tklLabel, tklSpinner);
+        header0HBox.setStyle("-fx-spacing: 5");
+        header0HBox.setAlignment(Pos.CENTER_LEFT);
+        
         Label tklLabel = new Label("Token Length:");
-        Spinner<Integer> tklSpinner = new Spinner<>(0, 15, 1);
+        tklSpinner = new Spinner<>(0, 15, 0);
         tklSpinner.setEditable(true);
         tklSpinner.getEditor().setTextFormatter(numberFormatter0);
         tklSpinner.setMaxWidth(70);
-
-        HBox header1HBox = new HBox(verLabel, versionSpinner, msgTypeLabel, cbxMsgType, tklLabel, tklSpinner);
-        header1HBox.setStyle("-fx-spacing: 5");
-        header1HBox.setAlignment(Pos.CENTER_LEFT);
-
-        Label codeLabel = new Label("Code:");
-        Spinner<Integer> codeClassSpinner = new Spinner<>(0, 7, 1);
+        tklRandom = new CheckBox("R?");
+        tklRandom.setTooltip(new Tooltip("Random selection"));
+        tklRandom.setSelected(false);
+        tklRandom.setOnAction(e -> handleTklRandomAction(e));
+        
+        Label codeLabel = new Label("   Code:");
+        codeClassSpinner = new Spinner<>(0, 7, 0);
         codeClassSpinner.setEditable(true);
         codeClassSpinner.getEditor().setTextFormatter(numberFormatter1);
         codeClassSpinner.setMaxWidth(60);
-        Spinner<Integer> codeDetailSpinner = new Spinner<>(0, 31, 1);
+        codeDetailSpinner = new Spinner<>(0, 31, 0);
         codeDetailSpinner.setEditable(true);
         codeDetailSpinner.getEditor().setTextFormatter(numberFormatter2);
         codeDetailSpinner.setMaxWidth(70);
+        codeRandom = new CheckBox("R?");
+        codeRandom.setTooltip(new Tooltip("Random selection"));
+        codeRandom.setSelected(false);
+        codeRandom.setOnAction(e -> handleCodeRandomAction(e));
+
+        HBox header1HBox = new HBox(tklLabel, tklSpinner, tklRandom, codeLabel, codeClassSpinner, codeDetailSpinner, codeRandom);
+        header1HBox.setStyle("-fx-spacing: 5");
+        header1HBox.setAlignment(Pos.CENTER_LEFT);
+
+        
         Label msgID = new Label("Msg. ID:");
-        Spinner<Integer> msgIDSpinner = new Spinner<>(0, 65535, 1);
+        msgIDSpinner = new Spinner<>(0, 65535, 0);
         msgIDSpinner.setEditable(true);
         msgIDSpinner.getEditor().setTextFormatter(numberFormatter3);
+        msgIDRandom = new CheckBox("R?");
+        msgIDRandom.setTooltip(new Tooltip("Random selection"));
+        msgIDRandom.setSelected(false);
+        msgIDRandom.setOnAction(e -> handleMsgIDRandomAction(e));
 
-        HBox header2HBox = new HBox(codeLabel, codeClassSpinner, codeDetailSpinner, msgID, msgIDSpinner);
+        HBox header2HBox = new HBox(msgID, msgIDSpinner, msgIDRandom);
         header2HBox.setStyle("-fx-spacing: 5");
         header2HBox.setAlignment(Pos.CENTER_LEFT);
 
         HBox tokenSepHBox = createNameSeparator("Token");
 
         Label tokenLabel = new Label("Token:");
-        TextField tokenTextField = new TextField();
-        HBox tokenHBox = new HBox(tokenLabel, tokenTextField);
+        tokenTextField = new TextField();
+        tokenRandom = new CheckBox("R?");
+        tokenRandom.setTooltip(new Tooltip("Random selection"));
+        tokenRandom.setSelected(false);
+        tokenRandom.setOnAction(e -> handleTokenRandomAction(e));
+        HBox tokenHBox = new HBox(tokenLabel, tokenTextField, tokenRandom);
         tokenHBox.setStyle("-fx-spacing: 5");
         tokenHBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(tokenTextField, Priority.ALWAYS);
 
         HBox optionsSepHBox = createNameSeparator("Option(s)");
 
@@ -200,10 +255,51 @@ public class CoAPClient extends Application {
                 deleteOption();
             }
         });
+        
+        optionRandom = new CheckBox("R?");
+        optionRandom.setTooltip(new Tooltip("Random selection"));
+        optionRandom.setSelected(false);
+        optionRandom.setOnAction(e -> handleOptionRandomAction(e));
 
-        HBox optionsBtnHBox = new HBox(btnAdd, btnRemove);
+        HBox optionsBtnHBox = new HBox(btnAdd, btnRemove, optionRandom);
         optionsBtnHBox.setStyle("-fx-spacing: 5");
         optionsBtnHBox.setAlignment(Pos.CENTER_LEFT);
+
+        HBox payloadHBox = createNameSeparator("Payload");
+        enablePayload = new CheckBox("Including payload");
+        enablePayload.setSelected(false);
+        enablePayload.setOnAction(e -> handleEnablePayloadAction(e));
+        defaultPayloadMarker = new CheckBox("Default Payload Marker");
+        defaultPayloadMarker.setSelected(true);
+        defaultPayloadMarker.setDisable(true);
+        defaultPayloadMarker.setOnAction(e -> handleDefaultPayloadMarkerAction(e));
+        payloadMarkerRandom = new CheckBox("R?");
+        payloadMarkerRandom.setTooltip(new Tooltip("Random selection"));
+        payloadMarkerRandom.setSelected(false);
+        payloadMarkerRandom.setDisable(true);
+        payloadMarkerRandom.setOnAction(e -> handlePayloadMarkerRandomAction(e));
+        payloadMarkerTextField = new TextField();
+        payloadMarkerTextField.setText("11111111");
+        payloadMarkerTextField.setDisable(true);
+        HBox pmHBox = new HBox(defaultPayloadMarker, payloadMarkerRandom, payloadMarkerTextField);
+        pmHBox.setStyle("-fx-spacing: 5");
+        pmHBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(payloadMarkerTextField, Priority.ALWAYS);
+
+        Label pLabel = new Label("Payload:");
+        payloadRandom = new CheckBox("R?");
+        payloadRandom.setTooltip(new Tooltip("Random selection"));
+        payloadRandom.setSelected(false);
+        payloadRandom.setDisable(true);
+        payloadRandom.setOnAction(e -> handlePayloadRandomAction(e));
+        
+        HBox pLabelHBox = new HBox(pLabel, payloadRandom);
+        pLabelHBox.setStyle("-fx-spacing: 5");
+        pLabelHBox.setAlignment(Pos.CENTER_LEFT);
+        
+        payloadTextArea = new TextArea();
+        payloadTextArea.setMaxWidth(460);
+        payloadTextArea.setDisable(true);
 
         Separator separator1 = new Separator();
 
@@ -213,17 +309,7 @@ public class CoAPClient extends Application {
 
             @Override
             public void handle(ActionEvent event) {
-                CoapMessage coapMessage = new CoapMessage();
-                coapMessage.setVersion(versionSpinner.getValue());
-                coapMessage.setMsgType(cbxMsgType.getSelectionModel().getSelectedItem().ordinal());
-                coapMessage.setTklLength(tklSpinner.getValue());
-                coapMessage.setCodeClass(codeClassSpinner.getValue());
-                coapMessage.setCodeDetail(codeDetailSpinner.getValue());
-                coapMessage.setMsgID(msgIDSpinner.getValue());
-                coapMessage.setToken(new BigInteger(tokenTextField.getText()));
-                coapMessage.setOptions(options);
-                coapMessage.setPayloadMarker(payloadMarkerTextField.getText());
-                coapMessage.setPayload(payloadTextArea.getText());
+                CoapMessage coapMessage = getCoapMessage();
                 String binaryString = coapMessage.toBitString();
                 if (!binaryString.equals("") && !destIPTextField.getText().equals("") && !destPortTextField.getText().equals("")) {
                     String hexStr = convertBinaryToHex(binaryString.replaceAll("\\s", ""));
@@ -271,20 +357,15 @@ public class CoAPClient extends Application {
 
             @Override
             public void handle(ActionEvent event) {
-                Dialog binaryDialog = new Dialog();
-                binaryDialog.initModality(Modality.NONE);
-                Label label1 = new Label("CoAP Message (Binary):");
-                binaryTextArea = new TextArea();
-                binaryTextArea.setWrapText(true);
-                binaryTextArea.setFont(new Font("Courier New", 15));
-                HBox textAreaHBox = new HBox(binaryTextArea);
-                textAreaHBox.setStyle("-fx-spacing: 5");
-                textAreaHBox.setAlignment(Pos.CENTER_LEFT);
-                HBox.setHgrow(binaryTextArea, Priority.ALWAYS);
-                VBox vbox = new VBox(label1, textAreaHBox);
-                binaryDialog.getDialogPane().getChildren().add(vbox);
-                binaryDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK);
-                binaryDialog.show();
+
+                CoapMessage coapMessage = getCoapMessage();
+                if (coapMessage != null) {
+                    Alert alert = new Alert(AlertType.INFORMATION);
+                    alert.setTitle("01");
+                    alert.setHeaderText("CoAP Message (Binary):");
+                    alert.setContentText(coapMessage.toBitString());
+                    alert.showAndWait();
+                }
             }
         });
         Button btnHelp = new Button();
@@ -308,30 +389,9 @@ public class CoAPClient extends Application {
         buttonHBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(buttonPane, Priority.ALWAYS);
 
-        HBox payloadHBox = createNameSeparator("Payload");
-        enablePayload = new CheckBox("Including payload");
-        enablePayload.setSelected(false);
-        enablePayload.setOnAction(e -> handleEnablePayloadAction(e));
-        defaultPayloadMarker = new CheckBox("Default Payload Marker");
-        defaultPayloadMarker.setSelected(true);
-        defaultPayloadMarker.setDisable(true);
-        defaultPayloadMarker.setOnAction(e -> handleDefaultPayloadMarkerAction(e));
-        payloadMarkerTextField = new TextField();
-        payloadMarkerTextField.setText("11111111");
-        payloadMarkerTextField.setDisable(true);
-        HBox pmHBox = new HBox(defaultPayloadMarker, payloadMarkerTextField);
-        pmHBox.setStyle("-fx-spacing: 5");
-        pmHBox.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(payloadMarkerTextField, Priority.ALWAYS);
-
-        Label pLabel = new Label("Payload:");
-        payloadTextArea = new TextArea();
-        payloadTextArea.setMaxWidth(460);
-        payloadTextArea.setDisable(true);
-
-        VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header1HBox, header2HBox,
+        VBox reqVBox = new VBox(destSepHBox, destHBox, headerSepHBox, header0HBox, header1HBox, header2HBox,
                 tokenSepHBox, tokenHBox, optionsSepHBox, optionsTable, optionsBtnHBox, payloadHBox,
-                enablePayload, pmHBox, pLabel, payloadTextArea, separator1, buttonHBox);
+                enablePayload, pmHBox, pLabelHBox, payloadTextArea, separator1, buttonHBox);
         reqVBox.setSpacing(10);
         reqVBox.setPadding(new Insets(20, 20, 20, 20));
 
@@ -356,7 +416,7 @@ public class CoAPClient extends Application {
         StackPane root = new StackPane();
         root.getChildren().add(hbox);
 
-        Scene scene = new Scene(root, 960, 640);
+        Scene scene = new Scene(root, 960, 700);
 
         primaryStage.setTitle("CoAP Client");
         primaryStage.setScene(scene);
@@ -404,6 +464,7 @@ public class CoAPClient extends Application {
 
     private void handleDefaultPayloadMarkerAction(ActionEvent e) {
         if (defaultPayloadMarker.isSelected()) {
+            payloadMarkerRandom.setSelected(false);
             payloadMarkerTextField.setText("11111111");
             payloadMarkerTextField.setDisable(true);
         } else {
@@ -414,7 +475,9 @@ public class CoAPClient extends Application {
     private void handleEnablePayloadAction(ActionEvent e) {
         if (enablePayload.isSelected()) {
             defaultPayloadMarker.setDisable(false);
+            payloadMarkerRandom.setDisable(false);
             payloadTextArea.setDisable(false);
+            payloadRandom.setDisable(false);
             if (defaultPayloadMarker.isSelected()) {
                 payloadMarkerTextField.setText("11111111");
                 payloadMarkerTextField.setDisable(true);
@@ -423,9 +486,131 @@ public class CoAPClient extends Application {
             }
         } else {
             defaultPayloadMarker.setDisable(true);
+            payloadMarkerRandom.setDisable(true);
             payloadMarkerTextField.setDisable(true);
             payloadTextArea.setDisable(true);
+            payloadRandom.setDisable(true);
         }
+    }
+
+    private void handleVersionRandomAction(ActionEvent e) {
+        if (versionRandom.isSelected()) {
+            Random rand = new Random();
+            versionSpinner.getEditor().setText(String.valueOf(rand.nextInt(4)));
+        } else {
+            versionSpinner.getEditor().setText(String.valueOf("0"));
+        }
+    }
+    
+    private void handleMsgTypeRandomAction(ActionEvent e) {
+        if (msgTypeRandom.isSelected()) {
+            Random rand = new Random();
+            cbxMsgType.getSelectionModel().select(rand.nextInt(4));
+        } else {
+            cbxMsgType.getSelectionModel().selectFirst();
+        }
+    }
+    
+    private void handleTklRandomAction(ActionEvent e) {
+        if (tklRandom.isSelected()) {
+            Random rand = new Random();
+            tklSpinner.getEditor().setText(String.valueOf(rand.nextInt(16)));
+        } else {
+            tklSpinner.getEditor().setText(String.valueOf("0"));
+        }
+    }
+    
+    private void handleCodeRandomAction(ActionEvent e) {
+        if (codeRandom.isSelected()) {
+            Random rand1 = new Random();
+            Random rand2 = new Random();
+            codeClassSpinner.getEditor().setText(String.valueOf(rand1.nextInt(8)));
+            codeDetailSpinner.getEditor().setText(String.valueOf(rand2.nextInt(32)));
+        } else {
+            codeClassSpinner.getEditor().setText(String.valueOf("0"));
+            codeDetailSpinner.getEditor().setText(String.valueOf("0"));
+        }
+    }
+    
+    private void handleMsgIDRandomAction(ActionEvent e) {
+        if (msgIDRandom.isSelected()) {
+            Random rand = new Random();
+            msgIDSpinner.getEditor().setText(String.valueOf(rand.nextInt(65536)));
+        } else {
+            msgIDSpinner.getEditor().setText(String.valueOf("0"));
+        }
+    }
+    
+    private void handleTokenRandomAction(ActionEvent e) {
+        if (tokenRandom.isSelected()) {
+            tokenTextField.setText(new BigInteger(120, new Random()).toString());
+        } else {
+            tokenTextField.setText("");
+        }
+    }
+    
+    private void handlePayloadMarkerRandomAction(ActionEvent e) {
+        if (payloadMarkerRandom.isSelected()) {
+            defaultPayloadMarker.setSelected(false);
+            payloadMarkerTextField.setText(new StringUtil().getRandomBinary(8));
+        } 
+    }
+    
+    private void handlePayloadRandomAction(ActionEvent e) {
+        if (payloadRandom.isSelected()) {
+            payloadTextArea.setText(new StringUtil().getRandom(new Random().nextInt(80)));
+        } else {
+            payloadTextArea.setText("");
+        }
+       
+    }
+    
+    private void handleOptionRandomAction(ActionEvent e) {
+        if (optionRandom.isSelected()) {
+            options.clear();
+            Random rand1 = new Random();
+            Random rand2 = new Random();
+            Random rand3 = new Random();
+            Random rand4 = new Random();
+            Random rand5 = new Random();
+            for (int i = 0; i < rand1.nextInt(12); i++) {
+                Option o = new Option();
+                o.setDelta(rand2.nextInt(16));
+                o.setDeltaExtended(rand2.nextInt(65536));
+                o.setLength(rand3.nextInt(16));
+                o.setLengthExtended(rand4.nextInt(65536));
+                o.setValue(new StringUtil().getRandom(rand5.nextInt(80)));
+                options.add(o);
+            }
+        } else {
+            options.clear();
+        }
+    }
+
+    private CoapMessage getCoapMessage() {
+        if (reqCheckPassed()) {
+            CoapMessage coapMessage = new CoapMessage();
+            coapMessage.setVersion(Integer.parseInt(versionSpinner.getEditor().getText()));
+            coapMessage.setMsgType(cbxMsgType.getSelectionModel().getSelectedItem().ordinal());
+            coapMessage.setTklLength(Integer.parseInt(tklSpinner.getEditor().getText()));
+            coapMessage.setCodeClass(Integer.parseInt(codeClassSpinner.getEditor().getText()));
+            coapMessage.setCodeDetail(Integer.parseInt(codeDetailSpinner.getEditor().getText()));
+            coapMessage.setMsgID(Integer.parseInt(msgIDSpinner.getEditor().getText()));
+            if (!tokenTextField.getText().equals("")) {
+                coapMessage.setToken(new BigInteger(tokenTextField.getText()));
+            }
+            coapMessage.setOptions(options);
+            coapMessage.setHasPayload(enablePayload.isSelected());
+            coapMessage.setPayloadMarker(payloadMarkerTextField.getText());
+            coapMessage.setPayload(payloadTextArea.getText());
+            return coapMessage;
+        } else {
+            return null;
+        }
+    }
+
+    private boolean reqCheckPassed() {
+        return true;
     }
 
     /**

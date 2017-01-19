@@ -126,7 +126,9 @@ public class CoapMessage {
         bits = bits + String.format("%5s", Integer.toBinaryString(codeDetail)).replace(' ', '0');
         bits = bits + String.format("%16s", Integer.toBinaryString(msgID)).replace(' ', '0');
         if (tklLength != 0) {
-            bits = bits + String.format("%" + tklLength * 8 + "s", token.toString(2)).replace(' ', '0');
+            if (token != null) {
+                bits = bits + String.format("%" + tklLength * 8 + "s", token.toString(2)).replace(' ', '0');
+            }      
         }
         for (Option o : options) {
             bits = bits + String.format("%4s", Integer.toBinaryString(o.getDelta())).replace(' ', '0');
@@ -146,16 +148,18 @@ public class CoapMessage {
                 Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        bits = bits + String.format("%8s", payloadMarker.replace(' ', '0'));
-        try {
-            byte[] b = payload.getBytes("UTF-8");
-            for (int i = 0; i < b.length; i++) {
-                bits = bits + String.format("%8s", Integer.toBinaryString(b[i] & 0xFF)).replace(' ', '0');
+        if (hasPayload) {
+            bits = bits + String.format("%8s", payloadMarker.replace(' ', '0'));
+            try {
+                byte[] b = payload.getBytes("UTF-8");
+                for (int i = 0; i < b.length; i++) {
+                    bits = bits + String.format("%8s", Integer.toBinaryString(b[i] & 0xFF)).replace(' ', '0');
+                }
+            } catch (UnsupportedEncodingException ex) {
+                Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(bits);
         }
-        System.out.println(bits);
         return bits;
     }
 }
