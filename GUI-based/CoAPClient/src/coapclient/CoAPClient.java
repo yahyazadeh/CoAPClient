@@ -97,6 +97,11 @@ public class CoAPClient extends Application {
     private TextField payloadMarkerTextField;
     private TextArea payloadTextArea;
     private CheckBox payloadRandom;
+    private TextField minPLengthTextField;
+    private TextField maxPLengthTextField;
+    private Label pLabel;
+    private Label minPLength;
+    private Label maxPLength;
 
     @Override
 
@@ -297,14 +302,29 @@ public class CoAPClient extends Application {
         pmHBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(payloadMarkerTextField, Priority.ALWAYS);
 
-        Label pLabel = new Label("Payload:");
+        pLabel = new Label("Payload:");
+        pLabel.setDisable(true);
         payloadRandom = new CheckBox("R?");
         payloadRandom.setTooltip(new Tooltip("Random selection"));
         payloadRandom.setSelected(false);
         payloadRandom.setDisable(true);
         payloadRandom.setOnAction(e -> handlePayloadRandomAction(e));
         
-        HBox pLabelHBox = new HBox(pLabel, payloadRandom);
+        minPLength = new Label("   Min. Length:");
+        minPLength.setDisable(true);
+        minPLengthTextField = new TextField();
+        minPLengthTextField.setMaxWidth(80);
+        minPLengthTextField.setText("0");
+        minPLengthTextField.setDisable(true);
+        
+        maxPLength = new Label("   Max. Length:");
+        maxPLength.setDisable(true);
+        maxPLengthTextField = new TextField();
+        maxPLengthTextField.setMaxWidth(80);
+        maxPLengthTextField.setText("40");
+        maxPLengthTextField.setDisable(true);
+        
+        HBox pLabelHBox = new HBox(pLabel, payloadRandom, minPLength, minPLengthTextField, maxPLength, maxPLengthTextField);
         pLabelHBox.setStyle("-fx-spacing: 5");
         pLabelHBox.setAlignment(Pos.CENTER_LEFT);
         
@@ -489,6 +509,11 @@ public class CoAPClient extends Application {
             payloadMarkerRandom.setDisable(false);
             payloadTextArea.setDisable(false);
             payloadRandom.setDisable(false);
+            minPLengthTextField.setDisable(false);
+            maxPLengthTextField.setDisable(false);
+            pLabel.setDisable(false);
+            minPLength.setDisable(false);
+            maxPLength.setDisable(false);
             if (defaultPayloadMarker.isSelected()) {
                 payloadMarkerTextField.setText("11111111");
                 payloadMarkerTextField.setDisable(true);
@@ -501,6 +526,11 @@ public class CoAPClient extends Application {
             payloadMarkerTextField.setDisable(true);
             payloadTextArea.setDisable(true);
             payloadRandom.setDisable(true);
+            minPLengthTextField.setDisable(true);
+            maxPLengthTextField.setDisable(true);
+            pLabel.setDisable(true);
+            minPLength.setDisable(true);
+            maxPLength.setDisable(true);
         }
     }
 
@@ -569,7 +599,8 @@ public class CoAPClient extends Application {
     
     private void handlePayloadRandomAction(ActionEvent e) {
         if (payloadRandom.isSelected()) {
-            payloadTextArea.setText(new StringUtil().getRandom(new Random().nextInt(80)));
+            payloadTextArea.setText(new StringUtil().getRandom(new Random().nextInt(Integer.parseInt(maxPLengthTextField.getText()) + 1) 
+                    + Integer.parseInt(minPLengthTextField.getText())));
         } else {
             payloadTextArea.setText("");
         }
