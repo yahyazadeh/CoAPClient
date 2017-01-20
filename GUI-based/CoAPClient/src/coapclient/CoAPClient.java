@@ -599,7 +599,7 @@ public class CoAPClient extends Application {
     
     private void handlePayloadRandomAction(ActionEvent e) {
         if (payloadRandom.isSelected()) {
-            payloadTextArea.setText(new StringUtil().getRandom(new Random().nextInt(Integer.parseInt(maxPLengthTextField.getText()) + 1) 
+            payloadTextArea.setText(new StringUtil().getRandom(new Random().nextInt((Integer.parseInt(maxPLengthTextField.getText()) - Integer.parseInt(minPLengthTextField.getText())) + 1) 
                     + Integer.parseInt(minPLengthTextField.getText())));
         } else {
             payloadTextArea.setText("");
