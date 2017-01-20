@@ -86,9 +86,11 @@ public class CoAPClient extends Application {
     private CheckBox msgIDRandom;
     private TextField tokenTextField;
     private CheckBox tokenRandom;
+    private CheckBox tokenCorrelationCheck;
     private TableView<Option> optionsTable = new TableView<>();
     private ObservableList<Option> options = FXCollections.observableArrayList();
     private CheckBox optionRandom;
+    private CheckBox optionCorrelationCheck;
     private CheckBox enablePayload;
     private CheckBox defaultPayloadMarker;
     private CheckBox payloadMarkerRandom;
@@ -216,7 +218,10 @@ public class CoAPClient extends Application {
         tokenRandom.setTooltip(new Tooltip("Random selection"));
         tokenRandom.setSelected(false);
         tokenRandom.setOnAction(e -> handleTokenRandomAction(e));
-        HBox tokenHBox = new HBox(tokenLabel, tokenTextField, tokenRandom);
+        tokenCorrelationCheck = new CheckBox("CC?");
+        tokenCorrelationCheck.setTooltip(new Tooltip("Correlation check"));
+        tokenCorrelationCheck.setSelected(false);
+        HBox tokenHBox = new HBox(tokenLabel, tokenTextField, tokenRandom, tokenCorrelationCheck);
         tokenHBox.setStyle("-fx-spacing: 5");
         tokenHBox.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(tokenTextField, Priority.ALWAYS);
@@ -238,6 +243,7 @@ public class CoAPClient extends Application {
 
         Button btnAdd = new Button();
         btnAdd.setText("+");
+        btnAdd.setMinWidth(30);
         btnAdd.setOnAction(
                 new EventHandler<ActionEvent>() {
             @Override
@@ -248,6 +254,7 @@ public class CoAPClient extends Application {
 
         Button btnRemove = new Button();
         btnRemove.setText("-");
+        btnRemove.setMinWidth(30);
         btnRemove.setOnAction(
                 new EventHandler<ActionEvent>() {
             @Override
@@ -260,8 +267,12 @@ public class CoAPClient extends Application {
         optionRandom.setTooltip(new Tooltip("Random selection"));
         optionRandom.setSelected(false);
         optionRandom.setOnAction(e -> handleOptionRandomAction(e));
+        
+        optionCorrelationCheck = new CheckBox("CC?");
+        optionCorrelationCheck.setTooltip(new Tooltip("Correlation check"));
+        optionCorrelationCheck.setSelected(false);
 
-        HBox optionsBtnHBox = new HBox(btnAdd, btnRemove, optionRandom);
+        HBox optionsBtnHBox = new HBox(btnAdd, btnRemove, optionRandom, optionCorrelationCheck);
         optionsBtnHBox.setStyle("-fx-spacing: 5");
         optionsBtnHBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -579,13 +590,16 @@ public class CoAPClient extends Application {
                 o.setDeltaExtended(rand2.nextInt(65536));
                 o.setLength(rand3.nextInt(16));
                 o.setLengthExtended(rand4.nextInt(65536));
-                o.setValue(new StringUtil().getRandom(rand5.nextInt(80)));
+                // Maximum value length could be 269 + (2^16) - 1 = 65804, 
+                // In the case when option.length is 14 and option.lengthExtended is 16-bit all 1 (=65535)
+                o.setValue(new StringUtil().getRandom(rand5.nextInt(65805)));
                 options.add(o);
             }
         } else {
             options.clear();
         }
     }
+    
 
     private CoapMessage getCoapMessage() {
         if (reqCheckPassed()) {
@@ -603,6 +617,8 @@ public class CoAPClient extends Application {
             coapMessage.setHasPayload(enablePayload.isSelected());
             coapMessage.setPayloadMarker(payloadMarkerTextField.getText());
             coapMessage.setPayload(payloadTextArea.getText());
+            coapMessage.setHasTokenCC(tokenCorrelationCheck.isSelected());
+            coapMessage.setHasOptionCC(optionCorrelationCheck.isSelected());
             return coapMessage;
         } else {
             return null;

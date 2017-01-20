@@ -28,6 +28,8 @@ public class CoapMessage {
     private boolean hasPayload;
     private String payloadMarker;
     private String payload;
+    private boolean hasTokenCC;
+    private boolean hasOptionCC;
 
     public int getVersion() {
         return version;
@@ -117,6 +119,22 @@ public class CoapMessage {
         this.payload = payload;
     }
 
+    public boolean isHasTokenCC() {
+        return hasTokenCC;
+    }
+
+    public void setHasTokenCC(boolean hasTokenCC) {
+        this.hasTokenCC = hasTokenCC;
+    }
+
+    public boolean isHasOptionCC() {
+        return hasOptionCC;
+    }
+
+    public void setHasOptionCC(boolean hasOptionCC) {
+        this.hasOptionCC = hasOptionCC;
+    }
+
     public String toBitString() {
         String bits = "";
         bits = bits + String.format("%2s", Integer.toBinaryString(version)).replace(' ', '0');
@@ -125,29 +143,85 @@ public class CoapMessage {
         bits = bits + String.format("%3s", Integer.toBinaryString(codeClass)).replace(' ', '0');
         bits = bits + String.format("%5s", Integer.toBinaryString(codeDetail)).replace(' ', '0');
         bits = bits + String.format("%16s", Integer.toBinaryString(msgID)).replace(' ', '0');
-        if (tklLength != 0) {
-            if (token != null) {
-                bits = bits + String.format("%" + tklLength * 8 + "s", token.toString(2)).replace(' ', '0');
-            }      
-        }
-        for (Option o : options) {
-            bits = bits + String.format("%4s", Integer.toBinaryString(o.getDelta())).replace(' ', '0');
-            bits = bits + String.format("%4s", Integer.toBinaryString(o.getLength())).replace(' ', '0');
-            if (o.getDelta() == 13 || o.getDelta() == 14) {
-                bits = bits + String.format("%" + ((o.getDelta() == 13) ? "8" : "16") + "s", Integer.toBinaryString(o.getDeltaExtended())).replace(' ', '0');
-            }
-            if (o.getLength() == 13 || o.getLength() == 14) {
-                bits = bits + String.format("%" + ((o.getLength() == 13) ? "8" : "16") + "s", Integer.toBinaryString(o.getLengthExtended())).replace(' ', '0');
-            }
-            try {
-                byte[] b = o.getValue().getBytes("UTF-8");
-                for (int i = 0; i < b.length; i++) {
-                    bits = bits + String.format("%8s", Integer.toBinaryString(b[i] & 0xFF)).replace(' ', '0');
+        int tklNumBits = tklLength * 8;
+        if (hasTokenCC) {
+            if (tklLength != 0) {
+                if (token == null) {
+                    token = new BigInteger("0");
                 }
-            } catch (UnsupportedEncodingException ex) {
-                Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
+                String tokenBinaryString = token.toString(2);
+                if (tklNumBits >= tokenBinaryString.length()) {
+                    bits = bits + String.format("%" + tklNumBits + "s", tokenBinaryString).replace(' ', '0');
+                } else {
+                    bits = bits + tokenBinaryString.substring(tokenBinaryString.length() - tklNumBits, tokenBinaryString.length());
+                }
+            }
+        } else if (token != null) {
+            String tokenBinaryString = token.toString(2);
+            bits = bits + tokenBinaryString;
+        }
+        if (hasOptionCC) {
+            for (Option o : options) {
+                try {
+                    if (!o.getValue().equals("")) {
+                        byte[] b = o.getValue().getBytes("UTF-8");
+                        if (b.length < 13) {
+                            o.setLength(b.length);
+                        } else if (13 <= b.length && b.length < 269) {
+                            o.setLength(b.length);
+                            o.setLengthExtended(b.length - 13);
+                        } else if (b.length >= 269) {
+                            o.setLength(14);
+                            o.setLengthExtended(b.length - 269);
+                        }
+
+                        bits = bits + String.format("%4s", Integer.toBinaryString(o.getDelta())).replace(' ', '0');
+                        bits = bits + String.format("%4s", Integer.toBinaryString(o.getLength())).replace(' ', '0');
+
+                        if (o.getDelta() == 13 || o.getDelta() == 14) {
+                            bits = bits + String.format("%" + ((o.getDelta() == 13) ? "8" : "16") + "s", Integer.toBinaryString(o.getDeltaExtended())).replace(' ', '0');
+                        }
+                        if (o.getLength() == 13 || o.getLength() == 14) {
+                            bits = bits + String.format("%" + ((o.getLength() == 13) ? "8" : "16") + "s", Integer.toBinaryString(o.getLengthExtended())).replace(' ', '0');
+                        }
+
+                        for (int i = 0; i < b.length; i++) {
+                            bits = bits + String.format("%8s", Integer.toBinaryString(b[i] & 0xFF)).replace(' ', '0');
+                        }
+                    }
+                } catch (UnsupportedEncodingException ex) {
+                    Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } else {
+            for (Option o : options) {
+                bits = bits + String.format("%4s", Integer.toBinaryString(o.getDelta())).replace(' ', '0');
+                bits = bits + String.format("%4s", Integer.toBinaryString(o.getLength())).replace(' ', '0');
+                String deltaExtBinaryString = Integer.toBinaryString(o.getDeltaExtended());
+                if (deltaExtBinaryString.length() <= 8) {
+                    bits = bits + String.format("%8s", deltaExtBinaryString).replace(' ', '0');
+                } else {
+                    bits = bits + String.format("%16s", deltaExtBinaryString).replace(' ', '0');
+                }
+                String lengthExtBinaryString = Integer.toBinaryString(o.getLengthExtended());
+                if (lengthExtBinaryString.length() <= 8) {
+                    bits = bits + String.format("%8s", lengthExtBinaryString).replace(' ', '0');
+                } else {
+                    bits = bits + String.format("%16s", lengthExtBinaryString).replace(' ', '0');
+                }
+                try {
+                    if (!o.getValue().equals("")) {
+                        byte[] b = o.getValue().getBytes("UTF-8");
+                        for (int i = 0; i < b.length; i++) {
+                            bits = bits + String.format("%8s", Integer.toBinaryString(b[i] & 0xFF)).replace(' ', '0');
+                        }
+                    }
+                } catch (UnsupportedEncodingException ex) {
+                    Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
+
         if (hasPayload) {
             bits = bits + String.format("%8s", payloadMarker.replace(' ', '0'));
             try {
