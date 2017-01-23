@@ -93,8 +93,11 @@ public class Client {
         CommandUtil cmd = new CommandUtil();
         preprocessParams();
         CoapMessage coapMessage = getCoapMessage();
-        String binaryString = coapMessage.toBitString();   
+        System.out.println("coap created");
+        String binaryString = coapMessage.toBitString(); 
+        System.out.println("to bit string");
         String hexStr = convertBinaryToHex(binaryString);
+        System.out.println("converted to hex");
         String command = String.format(sendMsgCommand, hexStr, ip, port);
         System.out.println(cmd.executeCommand("", command, false, ""));
     }
