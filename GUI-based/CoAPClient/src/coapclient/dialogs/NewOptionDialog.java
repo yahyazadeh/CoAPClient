@@ -9,17 +9,14 @@ import coapclient.entities.Option;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.function.UnaryOperator;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.GridPane;
 import javafx.util.converter.IntegerStringConverter;
@@ -37,8 +34,8 @@ public class NewOptionDialog extends Dialog<Option> {
     private TextArea valueTextArea;
     private Option option;
 
-    public NewOptionDialog() {
-        option = new Option();
+    public NewOptionDialog(Option op) {
+        option = op;
         setTitle("New Option");
         setHeaderText("Please enter the option information:");
 
@@ -85,6 +82,7 @@ public class NewOptionDialog extends Dialog<Option> {
         deltaSpinner.setMaxWidth(70);
         deltaSpinner.setEditable(true);
         deltaSpinner.getEditor().setTextFormatter(numberFormatter0);
+        deltaSpinner.getEditor().setText(String.valueOf(option.getDelta()));
         optionGrid.add(deltaSpinner, 1, 0, 1, 1);
         
         Label label1 = new Label("Length:");
@@ -95,6 +93,7 @@ public class NewOptionDialog extends Dialog<Option> {
         lengthSpinner.setMaxWidth(70);
         lengthSpinner.setEditable(true);
         lengthSpinner.getEditor().setTextFormatter(numberFormatter1);
+        lengthSpinner.getEditor().setText(String.valueOf(option.getLength()));
         optionGrid.add(lengthSpinner, 3, 0, 1, 1);
 
         Label label2 = new Label("Delta Ext.:");
@@ -104,6 +103,7 @@ public class NewOptionDialog extends Dialog<Option> {
         deltaExtSpinner.setMaxWidth(220);
         deltaExtSpinner.setEditable(true);
         deltaExtSpinner.getEditor().setTextFormatter(numberFormatter2);
+        deltaExtSpinner.getEditor().setText(String.valueOf(option.getDeltaExtended()));
         optionGrid.add(deltaExtSpinner, 1, 1, 3, 1);
 
         Label label3 = new Label("Length Ext.:");
@@ -113,6 +113,7 @@ public class NewOptionDialog extends Dialog<Option> {
         lengthExtSpinner.setMaxWidth(220);
         lengthExtSpinner.setEditable(true);
         lengthExtSpinner.getEditor().setTextFormatter(numberFormatter3);
+        lengthExtSpinner.getEditor().setText(String.valueOf(option.getLengthExtended()));
         optionGrid.add(lengthExtSpinner, 1, 2, 3, 1);
         
         Label label4 = new Label("Value:");
@@ -121,16 +122,17 @@ public class NewOptionDialog extends Dialog<Option> {
         valueTextArea = new TextArea();
         valueTextArea.setMaxHeight(70);
         valueTextArea.setMaxWidth(220);
+        valueTextArea.setText(option.getValue());
         optionGrid.add(valueTextArea, 1, 3, 3, 1);
        
         getDialogPane().setContent(optionGrid);
 
         setResultConverter(dialogButton -> {
             if (dialogButton == addOptionButtonType) {
-                option.setDelta(deltaSpinner.getValue());
-                option.setLength(lengthSpinner.getValue());
-                option.setDeltaExtended(deltaExtSpinner.getValue());
-                option.setLengthExtended(lengthExtSpinner.getValue());
+                option.setDelta(Integer.parseInt(deltaSpinner.getEditor().getText()));
+                option.setLength(Integer.parseInt(lengthSpinner.getEditor().getText()));
+                option.setDeltaExtended(Integer.parseInt(deltaExtSpinner.getEditor().getText()));
+                option.setLengthExtended(Integer.parseInt(lengthExtSpinner.getEditor().getText()));
                 option.setValue(valueTextArea.getText());
                 return option;
             }

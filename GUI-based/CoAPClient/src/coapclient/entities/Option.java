@@ -16,6 +16,14 @@ public class Option {
     private int lengthExtended;
     private String value;
 
+    public Option() {
+        this.delta = 0;
+        this.length = 0;
+        this.deltaExtended = 0;
+        this.lengthExtended = 0;
+        this.value = "";
+    }
+
     public int getDelta() {
         return delta;
     }
