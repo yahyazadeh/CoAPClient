@@ -130,11 +130,17 @@ public class CoapMessage {
     public String toBitString() {
         String bits = "";
         bits = bits + String.format("%2s", Integer.toBinaryString(version)).replace(' ', '0');
+        System.out.println(bits);
         bits = bits + String.format("%2s", Integer.toBinaryString(msgType)).replace(' ', '0');
+        System.out.println(bits);
         bits = bits + String.format("%4s", Integer.toBinaryString(tklLength)).replace(' ', '0');
+        System.out.println(bits);
         bits = bits + String.format("%3s", Integer.toBinaryString(codeClass)).replace(' ', '0');
+        System.out.println(bits);
         bits = bits + String.format("%5s", Integer.toBinaryString(codeDetail)).replace(' ', '0');
+        System.out.println(bits);
         bits = bits + String.format("%16s", Integer.toBinaryString(msgID)).replace(' ', '0');
+        System.out.println(bits);
         int tklNumBits = tklLength * 8;
         if (hasTokenCC) {
             if (tklLength != 0) {
@@ -152,6 +158,7 @@ public class CoapMessage {
             String tokenBinaryString = token.toString(2);
             bits = bits + tokenBinaryString;
         }
+        System.out.println(bits);
         if (hasOptionCC) {
             for (Option o : options) {
                 try {
@@ -213,10 +220,11 @@ public class CoapMessage {
                 }
             }
         }
-        
+        System.out.println(bits);
         if (payloadMarker != null) {
             bits = bits + String.format("%8s", payloadMarker.replace(' ', '0'));
         }
+        System.out.println(bits);
         if (payload != null) {
             try {
                 byte[] b = payload.getBytes("UTF-8");
@@ -227,6 +235,7 @@ public class CoapMessage {
                 Logger.getLogger(CoapMessage.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        System.out.println(bits);
         return bits;
     }
 }
