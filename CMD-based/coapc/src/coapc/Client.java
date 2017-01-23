@@ -227,7 +227,7 @@ public class Client {
             o.setLengthExtended(getRandomInt(0, 65535));
             // Maximum value length could be 269 + (2^16) - 1 = 65804, 
             // In the case when option.length is 14 and option.lengthExtended is 16-bit all 1 (=65535)
-            o.setValue(new StringUtil().getRandom(getRandomInt(0, 65804)));
+            o.setValue(new StringUtil().getRandom(getRandomInt(0, 65)));
             myOptions.add(o);
         }
         return myOptions;
