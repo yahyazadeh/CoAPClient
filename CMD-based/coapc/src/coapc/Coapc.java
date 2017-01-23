@@ -21,11 +21,11 @@ public class Coapc {
             Client client = new Client();
             JCommander jc = new JCommander(client, args);
             jc.setProgramName("java -jar coapc.jar");
-            try {
+//            try {
                 client.send();
-            } catch (NullPointerException ex) {
-                jc.usage();
-            }
+//            } catch (NullPointerException ex) {
+//                jc.usage();
+//            }
         } catch (ParameterException ex) {
             System.out.println(ex.getMessage());
         }
