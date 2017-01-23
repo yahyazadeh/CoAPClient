@@ -94,7 +94,7 @@ public class Client {
         preprocessParams();
         CoapMessage coapMessage = getCoapMessage();
         System.out.println("coap created");
-        String binaryString = coapMessage.toBitString(); 
+        String binaryString = coapMessage.toBitString();
         System.out.println("to bit string");
         String hexStr = convertBinaryToHex(binaryString);
         System.out.println("converted to hex");
@@ -161,8 +161,10 @@ public class Client {
                     options.add(option);
                 }
             }
-            if (payloadMarker.toLowerCase().equals("r")) {
-                payloadMarker = new StringUtil().getRandomBinary(8);
+            if (payloadMarker != null) {
+                if (payloadMarker.toLowerCase().equals("r")) {
+                    payloadMarker = new StringUtil().getRandomBinary(8);
+                }
             }
             if (payload == null) {
                 if (randomPayload) {
