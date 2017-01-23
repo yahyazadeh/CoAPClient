@@ -30,58 +30,58 @@ import java.util.Random;
  */
 public class Client {
 
-    @Parameter(names = {"-ip"}, required = true)
+    @Parameter(names = {"-ip"}, required = true, description = "Destination IP")
     private String ip;
 
-    @Parameter(names = {"-port"}, validateWith = NonNegativeValidator.class, required = true)
+    @Parameter(names = {"-port"}, validateWith = NonNegativeValidator.class, required = true, description = "Destination port")
     private String port;
 
-    @Parameter(names = {"-v"}, validateWith = TwoBitsValidator.class)
+    @Parameter(names = {"-v"}, validateWith = TwoBitsValidator.class, description = "CoAP version")
     private String version;
 
-    @Parameter(names = {"-t"}, validateWith = MessageTypeValidator.class)
+    @Parameter(names = {"-t"}, validateWith = MessageTypeValidator.class, description = "Message types: r|con|non|ack|rst|0~3")
     private String messageType;
 
-    @Parameter(names = {"-tkl"}, validateWith = FourBitsValidator.class)
+    @Parameter(names = {"-tkl"}, validateWith = FourBitsValidator.class, description = "Token length")
     private String tokenLength;
 
-    @Parameter(names = {"-c"}, validateWith = CodeValidator.class)
+    @Parameter(names = {"-c"}, validateWith = CodeValidator.class, description = "Message code: c.dd, where c is class code & dd is the detail code")
     private String code;
 
-    @Parameter(names = {"-mid"}, validateWith = SixteenBitsValidator.class)
+    @Parameter(names = {"-mid"}, validateWith = SixteenBitsValidator.class, description = "Message ID")
     private String messageId;
 
-    @Parameter(names = {"-tk"}, validateWith = TokenValidator.class)
+    @Parameter(names = {"-tk"}, validateWith = TokenValidator.class, description = "Token")
     private String token;
 
-    @Parameter(names = {"-tkcc"})
+    @Parameter(names = {"-tkcc"}, description = "Use if you want token correlation check to be performed")
     private boolean hasTokenCC = false;
 
-    @Parameter(names = "-op", variableArity = true, validateWith = OptionValidator.class)
+    @Parameter(names = "-op", variableArity = true, validateWith = OptionValidator.class, description = "It can have one or multiple arguments like <delta>:<length>:<deltaEx>:<lengthEx>:<value>")
     public List<String> ops = new ArrayList<>();
 
-    @Parameter(names = {"-opcc"})
+    @Parameter(names = {"-opcc"}, description = "Use if you want option correlation check to be performed")
     private boolean hasOptionCC = false;
 
-    @Parameter(names = {"-pm"}, validateWith = PayloadMarkerValidator.class)
+    @Parameter(names = {"-pm"}, validateWith = PayloadMarkerValidator.class, description = "The value can be 'r' or and 8-bit binaray for payload marker")
     private String payloadMarker;
 
-    @Parameter(names = {"-p"})
+    @Parameter(names = {"-p"}, description = "Payload")
     private String payload;
 
-    @Parameter(names = {"-rp"})
+    @Parameter(names = {"-rp"}, description = "Use if you want to use random payload")
     private boolean randomPayload = false;
 
-    @Parameter(names = {"-rpminl"}, validateWith = NonNegativeValidator.class)
+    @Parameter(names = {"-rpminl"}, validateWith = NonNegativeValidator.class, description = "Specify min payload length for the case the payload is random")
     private String randomePayloadMinLength = "0";
 
-    @Parameter(names = {"-rpmaxl"}, validateWith = NonNegativeValidator.class)
+    @Parameter(names = {"-rpmaxl"}, validateWith = NonNegativeValidator.class, description = "Specify max payload length for the case the payload is random")
     private String randomePayloadMaxLength = "40";
 
-    @Parameter(names = {"--random-all"})
+    @Parameter(names = {"--random-all"}, description = "Use this option if you want to randomize everything")
     private boolean random = false;
 
-    @Parameter(names = {"--cc-all"})
+    @Parameter(names = {"--cc-all"}, description = "Use this option if you want to perform all correlation check in the case of randomization")
     private boolean correlationCheck = false;
 
     private int codeClass;
