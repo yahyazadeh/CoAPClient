@@ -126,6 +126,22 @@ public class Client {
             }
             if (messageType.toLowerCase().equals("r")) {
                 messageType = String.valueOf(getRandomInt(0, 3));
+            } else {
+                switch (messageType.toLowerCase()) {
+                    case "con":
+                        messageType = "0";
+                        break;
+                    case "non":
+                        messageType = "1";
+                        break;
+                    case "ack":
+                        messageType = "2";
+                        break;
+                    case "rst":
+                        messageType = "3";
+                        break;
+                }
+                    
             }
             if (tokenLength.toLowerCase().equals("r")) {
                 tokenLength = String.valueOf(getRandomInt(0, 15));
